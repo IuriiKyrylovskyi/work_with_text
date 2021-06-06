@@ -39,22 +39,22 @@ const handleInputFile = () => {
   const fileExtantion = fileName.substr(fileName.lastIndexOf(".") + 1);
   // console.log(fileExtantion);
 
-  let reader = new FileReader();
+  textLength = new Promise((resolve, reject) => {
+    let reader = new FileReader();
 
-  reader.readAsText(file);
+    reader.onload = () => {
+      const text = reader.result;
+      // console.log(text);
 
-  reader.onload = () => {
-    const text = reader.result;
-    // console.log(text);
+      documentLength = text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "").length;
+      console.log(documentLength);
+      resolve(documentLength);
+    };
 
-    textLength = text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "").length;
-    console.log(textLength);
-  };
-  console.log("2", textLength);
+    reader.onerror = reject;
 
-  reader.onerror = () => {
-    console.log(reader.error);
-  };
+    reader.readAsText(file);
+  });
 
   return { fileSize, fileLoadedDate, fileExtantion, textLength };
 };
@@ -116,16 +116,16 @@ const handleCalcBtnClick = (e) => {
   console.log(todayDay);
 
   const getAmountOfWorkDays = getWorksHours() >= WORK_HOURS_DURATION ? getWorksHours() / WORK_HOURS_DURATION : 1;
-  console.log(getAmountOfWorkDays);
+  console.log("getAmountOfWorkDays", getAmountOfWorkDays);
 
   const getAmountOfWorkWeeks = getAmountOfWorkDays >= WORK_DAYS_PER_WEEK ? getAmountOfWorkDays / WORK_DAYS_PER_WEEK : 0;
-  console.log(getAmountOfWorkWeeks);
+  console.log("WorkWeeks", getAmountOfWorkWeeks);
 
   const getAmountOfLeftWorkDays = getAmountOfWorkDays > WORK_DAYS_PER_WEEK ? getAmountOfWorkDays % WORK_DAYS_PER_WEEK : getAmountOfWorkDays;
-  console.log(getAmountOfLeftWorkDays);
+  console.log("LeftWorkDays", getAmountOfLeftWorkDays);
 
   const getAmountOfLeftWorkHours = (getAmountOfLeftWorkDays - parseInt(getAmountOfLeftWorkDays)) * HOURS_PER_DAY - todayWorkHours + START_WORK_TIME;
-  console.log(getAmountOfLeftWorkHours);
+  console.log("LeftWorkHours", getAmountOfLeftWorkHours);
 
   const editingDate = moment()
     .add({
