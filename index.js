@@ -55,7 +55,7 @@ const handleInputFile = () => {
 
     reader.readAsText(file);
   });
-
+  console.log(textLength);
   return { fileSize, fileLoadedDate, fileExtantion, textLength };
 };
 
@@ -64,6 +64,8 @@ const handleInputFile = () => {
 const getAmountOfSymbols = () => {
   const textareaTextLength = inputTextElem.value.length || 0;
   const fileTextLength = handleInputFile() === undefined ? 0 : handleInputFile().fileSize;
+  const fileItemsLength = handleInputFile() === undefined ? 0 : handleInputFile().textLength.resolve().then((result) => result(value));
+  console.log("fileItems", fileItemsLength);
   // const fileTextLength = handleInputFile() === undefined ? 0 : handleInputFile().textLength;
   const commonLenght = textareaTextLength + fileTextLength;
   // console.log(textareaTextLength);
