@@ -17,6 +17,12 @@ const EDITING_ITEMS_PER_HOUR_ENG = 333;
 const MIN_EDIT_HOUR = 1;
 const PREP_TIME = 0.5;
 
+const WORK_HOURS_DURATION = 9;
+const WORK_DAYS_PER_WEEK = 5;
+const HOURS_PER_WEEK = 168;
+const HOURS_PER_DAY = 24;
+const START_WORK_TIME = 10;
+
 const EXTRA = 1.2;
 
 //--------price----
@@ -55,10 +61,22 @@ const handleInputFile = () => {
 
 // inputTextElem.addEventListener("change", handleInputFile);
 
+const getAmountOfSymbols = () => {
+  const textareaTextLength = inputTextElem.value.length || 0;
+  const fileTextLength = handleInputFile() === undefined ? 0 : handleInputFile().fileSize;
+  // const fileTextLength = handleInputFile() === undefined ? 0 : handleInputFile().textLength;
+  const commonLenght = textareaTextLength + fileTextLength;
+  // console.log(textareaTextLength);
+  // console.log(fileTextLength);
+  // console.log(commonLenght);
+  return commonLenght;
+};
+
 //------date-------
 const getWorksHours = (lang) => {
   const editingItemsPerHour = lang === "en" ? EDITING_ITEMS_PER_HOUR_ENG : EDITING_ITEMS_PER_HOUR;
-  const workHours = handleInputFile().fileSize / editingItemsPerHour + PREP_TIME;
+  const commonLenght = getAmountOfSymbols();
+  const workHours = commonLenght / editingItemsPerHour + PREP_TIME;
   console.log(workHours);
   return workHours < MIN_EDIT_HOUR ? MIN_EDIT_HOUR : workHours;
 };
@@ -73,13 +91,7 @@ const getPriceForItem = (length, isFileType, pricePerItem, minPrice) => {
 const handleCalcBtnClick = (e) => {
   e.preventDefault();
 
-  const textareaTextLength = inputTextElem.value.length || 0;
-  const fileTextLength = handleInputFile() === undefined ? 0 : handleInputFile().fileSize;
-  // const fileTextLength = handleInputFile() === undefined ? 0 : handleInputFile().textLength;
-  const commonLenght = textareaTextLength + fileTextLength;
-  // console.log(textareaTextLength);
-  // console.log(fileTextLength);
-  // console.log(commonLenght);
+  const commonLenght = getAmountOfSymbols();
 
   const lang = selectLangElem.value;
   const minPrice = lang === "en" ? MIN_ENG_PRICE : MIN_NORM_PRICE;
@@ -94,10 +106,47 @@ const handleCalcBtnClick = (e) => {
 
   priceElem.textContent = parseInt(Math.ceil(price));
   // priceElem.textContent = parseInt(Math.ceil(fileTypeDate));
+
+  // ------------------------------------------------------
+  const hoursLeftToday = 19 - moment().format("HH");
+  const todayWorkHours = hoursLeftToday > 0 ? hoursLeftToday - 1 : 0;
+  console.log("todayWorkHours", todayWorkHours);
+
+  const todayDay = moment().format("dd");
+  console.log(todayDay);
+
+  const getAmountOfWorkDays = getWorksHours() >= WORK_HOURS_DURATION ? getWorksHours() / WORK_HOURS_DURATION : 1;
+  console.log(getAmountOfWorkDays);
+
+  const getAmountOfWorkWeeks = getAmountOfWorkDays >= WORK_DAYS_PER_WEEK ? getAmountOfWorkDays / WORK_DAYS_PER_WEEK : 0;
+  console.log(getAmountOfWorkWeeks);
+
+  const getAmountOfLeftWorkDays = getAmountOfWorkDays > WORK_DAYS_PER_WEEK ? getAmountOfWorkDays % WORK_DAYS_PER_WEEK : getAmountOfWorkDays;
+  console.log(getAmountOfLeftWorkDays);
+
+  const getAmountOfLeftWorkHours = (getAmountOfLeftWorkDays - parseInt(getAmountOfLeftWorkDays)) * HOURS_PER_DAY - todayWorkHours + START_WORK_TIME;
+  console.log(getAmountOfLeftWorkHours);
+
+  const editingDate = moment()
+    .add({
+      hours: 00,
+      days: getAmountOfLeftWorkDays,
+      weeks: getAmountOfWorkWeeks,
+    })
+    .format("MMMM DD YYYY, HH:mm");
+
+  console.log(editingDate);
+
+  const editingTime = moment(new Date(editingDate)).set("hour", 00).hours(getAmountOfLeftWorkHours).format("MMMM DD YYYY, HH:mm");
+  console.log(editingTime);
+  // const addWeeks = moment.duration(getAmountOfWorkWeeks, "weeks");
+  // const addDays = moment.duration(getAmountOfLeftWorkDays, "days");
+
   deadlineDateElem.textContent = new Date();
   deadlineTimeElem.textContent = !fileType ? Math.ceil(getWorksHours(lang)) : Math.ceil(getWorksHours(lang) * EXTRA);
 };
 //
 calculteBtnElem.addEventListener("click", handleCalcBtnClick);
 
-console.log(moment(new Date()).format("MMMM DD YYYY"));
+console.log(moment().format("MMMM DD YYYY, HH:mm"));
+console.log(moment().format("MMMM DD YYYY"));
