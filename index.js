@@ -115,6 +115,7 @@ const handleCalcBtnClick = (e) => {
   // priceElem.textContent = parseInt(Math.ceil(fileTypeDate));
   // ------------------------------------------------------
   const workHours = getWorksHours(lang, fileType);
+  const maxWorkHours = Math.ceil(workHours);
   // const workHours = fileType !== 0 ? getWorksHours() : getWorksHours() * EXTRA;
 
   const hours = parseInt(moment().format("HH"));
@@ -127,12 +128,14 @@ const handleCalcBtnClick = (e) => {
   console.log("todayWorkHoursStart", todayWorkHoursStart);
 
   const todayMaxWorkHours = END_WORK_TIME - todayWorkHoursStart;
-  console.log(todayMaxWorkHours);
+  console.log("todayMaxWorkHours", todayMaxWorkHours);
 
-  if (todayMaxWorkHours >= workHours) {
+  if (todayMaxWorkHours > maxWorkHours) {
+    //} workHours) {
     const endHour = Math.ceil(todayWorkHoursStart + workHours);
     //} || (todayMaxWorkHours >= workHours * EXTRA && fileType)) {
     const endWorkTime = moment().set("hour", endHour).format("MMMM DD YYYY o HH:mm");
+    console.log("short endWorkTime", endWorkTime);
 
     deadlineDateElem.textContent = endWorkTime;
     return;
@@ -161,7 +164,7 @@ const handleCalcBtnClick = (e) => {
   const getAmountOfLeftWorkDays = getAmountOfWorkDays > WORK_DAYS_PER_WEEK ? getAmountOfWorkDays % WORK_DAYS_PER_WEEK : getAmountOfWorkDays;
   console.log("LeftWorkDays", getAmountOfLeftWorkDays);
 
-  const getAmountOfLeftHours = Math.ceil((getAmountOfLeftWorkDays - parseInt(getAmountOfLeftWorkDays)) * 100);
+  const getAmountOfLeftHours = Math.ceil((getAmountOfLeftWorkDays - parseInt(getAmountOfLeftWorkDays)) * WORK_HOURS_DURATION);
   console.log("LeftWorkHours", getAmountOfLeftHours);
 
   const endWorkHours = getAmountOfLeftHours + START_WORK_TIME;
