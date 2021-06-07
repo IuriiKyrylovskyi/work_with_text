@@ -5,6 +5,9 @@ const calculteBtnElem = document.querySelector(".form__submit");
 const priceElem = document.querySelector(".price__number");
 const deadlineDateElem = document.querySelector(".dealine__date");
 
+const SARTUDAY = "Sartuday";
+const SUNDAY = "Sunday";
+const DAYS_OFF = ["Sartuday", "Sunday"];
 const NORMAL_PRICE_FILE_FORMATS = ["doc", "docx", "rtf"];
 const PRICE_PER_ITEM = 0.05;
 const PRICE_PER_ENG_ITEM = 0.12; //  if selectedLang = selectElem.value === en
@@ -87,7 +90,6 @@ const getWorksHours = (lang, type) => {
   console.log(workHours);
   return workHours < MIN_EDIT_HOUR ? MIN_EDIT_HOUR : workHours;
 };
-//===============
 //---------
 
 const getPriceForItem = (length, isFileType, pricePerItem, minPrice) => {
@@ -113,15 +115,37 @@ const handleCalcBtnClick = (e) => {
 
   priceElem.textContent = parseInt(Math.ceil(price));
   // priceElem.textContent = parseInt(Math.ceil(fileTypeDate));
+
+  const todayDay = moment().format("dddd");
+  console.log("todayDay", todayDay);
+
+  let startWorkDay = new Date();
+
+  if (todayDay === SARTUDAY) {
+    startWorkDay = moment(todayDay, "MMMM DD YYYY, HH:mm")
+      .add({
+        days: 2,
+      })
+      .format("MMMM DD YYYY, HH:mm");
+  }
+
+  if (todayDay === SUNDAY) {
+    startWorkDay = moment(todayDay, "MMMM DD YYYY, HH:mm")
+      .add({
+        days: 1,
+      })
+      .format("MMMM DD YYYY, HH:mm");
+  }
+
+  console.log("startWorkDay", startWorkDay);
   // ------------------------------------------------------
   const workHours = getWorksHours(lang, fileType);
   const maxWorkHours = Math.ceil(workHours);
-  // const workHours = fileType !== 0 ? getWorksHours() : getWorksHours() * EXTRA;
 
-  const hours = parseInt(moment().format("HH"));
+  const hours = parseInt(moment(startWorkDay, "MMMM DD YYYY").format("HH"));
   console.log(hours);
 
-  const hoursFromToday = hours < END_WORK_TIME - 1 ? hours : parseInt(moment().set("hour", 00));
+  const hoursFromToday = hours < END_WORK_TIME - 1 ? hours : parseInt(moment(startWorkDay, "MMMM DD YYYY, HH:mm").set("hour", 00));
   console.log("hoursFromToday", hoursFromToday);
 
   const todayWorkHoursStart = hoursFromToday > START_WORK_TIME ? hoursFromToday : START_WORK_TIME;
@@ -140,14 +164,6 @@ const handleCalcBtnClick = (e) => {
     deadlineDateElem.textContent = endWorkTime;
     return;
   }
-
-  // if (todayMaxWorkHours >= workHours * EXTRA && !fileType) {
-  //   const endHour = Math.ceil(todayWorkHoursStart + workHours * EXTRA);
-  //   endWorkTime = moment().set("hour", endHour).format("MMMM DD YYYY o HH:mm");
-
-  //   deadlineDateElem.textContent = endWorkTime;
-  //   return;
-  // }
 
   const todayWorkHours = END_WORK_TIME - todayWorkHoursStart;
   console.log("todayWorkHours", todayWorkHours);
@@ -169,7 +185,7 @@ const handleCalcBtnClick = (e) => {
 
   const endWorkHours = getAmountOfLeftHours + START_WORK_TIME;
 
-  const editingDate = moment()
+  let editingDate = moment()
     .add({
       days: getAmountOfLeftWorkDays,
       weeks: getAmountOfWorkWeeks,
@@ -178,20 +194,30 @@ const handleCalcBtnClick = (e) => {
     .format("MMMM DD YYYY o HH:mm");
 
   console.log(editingDate);
-  //===================
-  // const getAmountOfLeftWorkHours = (workHours % HOURS_PER_DAY) + START_WORK_TIME;
-  // console.log("LeftWorkHours", getAmountOfLeftWorkHours);
 
-  const todayDay = moment().format("dd");
-  console.log("todayDay", todayDay);
+  const endWorkDay = moment(editingDate, "MMMM DD YYYY").format("dddd");
+  console.log("endWorkDay", endWorkDay);
 
-  // const addWeeks = moment.duration(getAmountOfWorkWeeks, "weeks");
-  // const addDays = moment.duration(getAmountOfLeftWorkDays, "days");
+  if (endWorkDay === SARTUDAY) {
+    editingDate = moment(editingDate, "MMMM DD YYYY, HH:mm")
+      .add({
+        days: 2,
+      })
+      .set("hour", endWorkHours)
+      .format("MMMM DD YYYY o HH:mm");
+  }
 
+  if (endWorkDay === SUNDAY) {
+    editingDate = moment(editingDate, "MMMM DD YYYY, HH:mm")
+      .add({
+        days: 1,
+      })
+      .set("hour", endWorkHours)
+      .format("MMMM DD YYYY o HH:mm");
+  }
+
+  console.log("date", editingDate);
   deadlineDateElem.textContent = editingDate;
 };
 
 calculteBtnElem.addEventListener("click", handleCalcBtnClick);
-
-// console.log(moment().format("MMMM DD YYYY, HH:mm"));
-// console.log(moment().format("MMMM DD YYYY"));
