@@ -4,7 +4,6 @@ const selectLangElem = document.querySelector(".form__select");
 const calculteBtnElem = document.querySelector(".form__submit");
 const priceElem = document.querySelector(".price__number");
 const deadlineDateElem = document.querySelector(".dealine__date");
-const deadlineTimeElem = document.querySelector(".dealine__time");
 
 const NORMAL_PRICE_FILE_FORMATS = ["doc", "docx", "rtf"];
 const PRICE_PER_ITEM = 0.05;
@@ -22,6 +21,7 @@ const WORK_DAYS_PER_WEEK = 5;
 const HOURS_PER_WEEK = 168;
 const HOURS_PER_DAY = 24;
 const START_WORK_TIME = 10;
+const END_WORK_TIME = 19;
 
 const EXTRA = 1.2;
 
@@ -47,7 +47,7 @@ const handleInputFile = () => {
       // console.log(text);
 
       documentLength = text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "").length;
-      console.log(documentLength);
+      // console.log(documentLength);
       resolve(documentLength);
     };
 
@@ -55,16 +55,21 @@ const handleInputFile = () => {
 
     reader.readAsText(file);
   });
-  console.log(textLength);
+  // console.log(textLength);
   return { fileSize, fileLoadedDate, fileExtantion, textLength };
 };
 
-// inputTextElem.addEventListener("change", handleInputFile);
-
 const getAmountOfSymbols = () => {
+  const onInputFile = handleInputFile();
+
   const textareaTextLength = inputTextElem.value.length || 0;
-  const fileTextLength = handleInputFile() === undefined ? 0 : handleInputFile().fileSize;
-  const fileItemsLength = handleInputFile() === undefined ? 0 : handleInputFile().textLength.resolve().then((result) => result(value));
+  const fileTextLength = onInputFile === undefined ? 0 : onInputFile.fileSize;
+  const fileItemsLength =
+    onInputFile === undefined
+      ? 0
+      : onInputFile.textLength.then((result) => {
+          console.log(result);
+        });
   console.log("fileItems", fileItemsLength);
   // const fileTextLength = handleInputFile() === undefined ? 0 : handleInputFile().textLength;
   const commonLenght = textareaTextLength + fileTextLength;
@@ -75,14 +80,14 @@ const getAmountOfSymbols = () => {
 };
 
 //------date-------
-const getWorksHours = (lang) => {
+const getWorksHours = (lang, type) => {
   const editingItemsPerHour = lang === "en" ? EDITING_ITEMS_PER_HOUR_ENG : EDITING_ITEMS_PER_HOUR;
   const commonLenght = getAmountOfSymbols();
-  const workHours = commonLenght / editingItemsPerHour + PREP_TIME;
+  const workHours = type !== 0 ? commonLenght / editingItemsPerHour + PREP_TIME : (commonLenght / editingItemsPerHour) * EXTRA + PREP_TIME;
   console.log(workHours);
   return workHours < MIN_EDIT_HOUR ? MIN_EDIT_HOUR : workHours;
 };
-
+//===============
 //---------
 
 const getPriceForItem = (length, isFileType, pricePerItem, minPrice) => {
@@ -100,7 +105,7 @@ const handleCalcBtnClick = (e) => {
   const pricePerItem = lang === "en" ? PRICE_PER_ENG_ITEM : PRICE_PER_ITEM;
 
   const fileType = handleInputFile() !== undefined ? NORMAL_PRICE_FILE_FORMATS.filter((type) => type === handleInputFile().fileExtantion).length : 0;
-  // console.log(fileType);
+  console.log(fileType);
   // const fileTypeDate = handleInputFile() !== undefined ? NORMAL_PRICE_FILE_FORMATS.filter((type) => type === handleInputFile().textLength).length : 0;
 
   const price = getPriceForItem(commonLenght, fileType, pricePerItem, minPrice);
@@ -108,16 +113,46 @@ const handleCalcBtnClick = (e) => {
 
   priceElem.textContent = parseInt(Math.ceil(price));
   // priceElem.textContent = parseInt(Math.ceil(fileTypeDate));
-
   // ------------------------------------------------------
-  const hoursLeftToday = 19 - moment().format("HH");
-  const todayWorkHours = hoursLeftToday > 0 ? hoursLeftToday - 1 : 0;
+  const workHours = getWorksHours(lang, fileType);
+  // const workHours = fileType !== 0 ? getWorksHours() : getWorksHours() * EXTRA;
+
+  const hours = parseInt(moment().format("HH"));
+  console.log(hours);
+
+  const hoursFromToday = hours < END_WORK_TIME - 1 ? hours : parseInt(moment().set("hour", 00));
+  console.log("hoursFromToday", hoursFromToday);
+
+  const todayWorkHoursStart = hoursFromToday > START_WORK_TIME ? hoursFromToday : START_WORK_TIME;
+  console.log("todayWorkHoursStart", todayWorkHoursStart);
+
+  const todayMaxWorkHours = END_WORK_TIME - todayWorkHoursStart;
+  console.log(todayMaxWorkHours);
+
+  if (todayMaxWorkHours >= workHours) {
+    const endHour = Math.ceil(todayWorkHoursStart + workHours);
+    //} || (todayMaxWorkHours >= workHours * EXTRA && fileType)) {
+    const endWorkTime = moment().set("hour", endHour).format("MMMM DD YYYY o HH:mm");
+
+    deadlineDateElem.textContent = endWorkTime;
+    return;
+  }
+
+  // if (todayMaxWorkHours >= workHours * EXTRA && !fileType) {
+  //   const endHour = Math.ceil(todayWorkHoursStart + workHours * EXTRA);
+  //   endWorkTime = moment().set("hour", endHour).format("MMMM DD YYYY o HH:mm");
+
+  //   deadlineDateElem.textContent = endWorkTime;
+  //   return;
+  // }
+
+  const todayWorkHours = END_WORK_TIME - todayWorkHoursStart;
   console.log("todayWorkHours", todayWorkHours);
 
-  const todayDay = moment().format("dd");
-  console.log(todayDay);
+  const leftWorkHours = workHours - todayWorkHours;
+  console.log("leftWorkHours", leftWorkHours);
 
-  const getAmountOfWorkDays = getWorksHours() >= WORK_HOURS_DURATION ? getWorksHours() / WORK_HOURS_DURATION : 1;
+  const getAmountOfWorkDays = leftWorkHours >= WORK_HOURS_DURATION ? leftWorkHours / WORK_HOURS_DURATION : 1;
   console.log("getAmountOfWorkDays", getAmountOfWorkDays);
 
   const getAmountOfWorkWeeks = getAmountOfWorkDays >= WORK_DAYS_PER_WEEK ? getAmountOfWorkDays / WORK_DAYS_PER_WEEK : 0;
@@ -126,29 +161,34 @@ const handleCalcBtnClick = (e) => {
   const getAmountOfLeftWorkDays = getAmountOfWorkDays > WORK_DAYS_PER_WEEK ? getAmountOfWorkDays % WORK_DAYS_PER_WEEK : getAmountOfWorkDays;
   console.log("LeftWorkDays", getAmountOfLeftWorkDays);
 
-  const getAmountOfLeftWorkHours = (getAmountOfLeftWorkDays - parseInt(getAmountOfLeftWorkDays)) * HOURS_PER_DAY - todayWorkHours + START_WORK_TIME;
-  console.log("LeftWorkHours", getAmountOfLeftWorkHours);
+  const getAmountOfLeftHours = Math.ceil((getAmountOfLeftWorkDays - parseInt(getAmountOfLeftWorkDays)) * 100);
+  console.log("LeftWorkHours", getAmountOfLeftHours);
+
+  const endWorkHours = getAmountOfLeftHours + START_WORK_TIME;
 
   const editingDate = moment()
     .add({
-      hours: 00,
       days: getAmountOfLeftWorkDays,
       weeks: getAmountOfWorkWeeks,
     })
-    .format("MMMM DD YYYY, HH:mm");
+    .set("hour", endWorkHours)
+    .format("MMMM DD YYYY o HH:mm");
 
   console.log(editingDate);
+  //===================
+  // const getAmountOfLeftWorkHours = (workHours % HOURS_PER_DAY) + START_WORK_TIME;
+  // console.log("LeftWorkHours", getAmountOfLeftWorkHours);
 
-  const editingTime = moment(new Date(editingDate)).set("hour", 00).hours(getAmountOfLeftWorkHours).format("MMMM DD YYYY, HH:mm");
-  console.log(editingTime);
+  const todayDay = moment().format("dd");
+  console.log("todayDay", todayDay);
+
   // const addWeeks = moment.duration(getAmountOfWorkWeeks, "weeks");
   // const addDays = moment.duration(getAmountOfLeftWorkDays, "days");
 
-  deadlineDateElem.textContent = new Date();
-  deadlineTimeElem.textContent = !fileType ? Math.ceil(getWorksHours(lang)) : Math.ceil(getWorksHours(lang) * EXTRA);
+  deadlineDateElem.textContent = editingDate;
 };
-//
+
 calculteBtnElem.addEventListener("click", handleCalcBtnClick);
 
-console.log(moment().format("MMMM DD YYYY, HH:mm"));
-console.log(moment().format("MMMM DD YYYY"));
+// console.log(moment().format("MMMM DD YYYY, HH:mm"));
+// console.log(moment().format("MMMM DD YYYY"));
