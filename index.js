@@ -97,6 +97,30 @@ const getPriceForItem = (length, isFileType, pricePerItem, minPrice) => {
   return price > minPrice ? price : minPrice;
 };
 
+//--------
+const includeDayOff = (edgeWorkDay, givenDay) => {
+  if (givenDay === SARTUDAY) {
+    edgeWorkDay = moment(edgeWorkDay, "MMMM DD YYYY, HH:mm")
+      .add({
+        days: 2,
+      })
+      .format("MMMM DD YYYY, HH:mm");
+    console.log("sunday");
+  }
+
+  if (givenDay === SUNDAY) {
+    edgeWorkDay = moment(edgeWorkDay, "MMMM DD YYYY, HH:mm")
+      .add({
+        days: 1,
+      })
+      .format("MMMM DD YYYY, HH:mm");
+  }
+
+  console.log("edgeWorkDay", edgeWorkDay);
+  return edgeWorkDay;
+};
+
+//---------main-----
 const handleCalcBtnClick = (e) => {
   e.preventDefault();
 
@@ -121,31 +145,17 @@ const handleCalcBtnClick = (e) => {
 
   let startWorkDay = new Date();
 
-  if (todayDay === SARTUDAY) {
-    startWorkDay = moment(todayDay, "MMMM DD YYYY, HH:mm")
-      .add({
-        days: 2,
-      })
-      .format("MMMM DD YYYY, HH:mm");
-  }
-
-  if (todayDay === SUNDAY) {
-    startWorkDay = moment(todayDay, "MMMM DD YYYY, HH:mm")
-      .add({
-        days: 1,
-      })
-      .format("MMMM DD YYYY, HH:mm");
-  }
-
-  console.log("startWorkDay", startWorkDay);
-  // ------------------------------------------------------
+  const startDate = includeDayOff(startWorkDay, todayDay);
+  
   const workHours = getWorksHours(lang, fileType);
   const maxWorkHours = Math.ceil(workHours);
 
-  const hours = parseInt(moment(startWorkDay, "MMMM DD YYYY").format("HH"));
+  const hours = parseInt(moment(startDate, "MMMM DD YYYY").format("HH"));
+  // const hours = parseInt(moment(startWorkDay, "MMMM DD YYYY").format("HH"));
   console.log(hours);
 
-  const hoursFromToday = hours < END_WORK_TIME - 1 ? hours : parseInt(moment(startWorkDay, "MMMM DD YYYY, HH:mm").set("hour", 00));
+  const hoursFromToday = hours < END_WORK_TIME - 1 ? hours : parseInt(moment(startDate, "MMMM DD YYYY, HH:mm").set("hour", 00));
+  // const hoursFromToday = hours < END_WORK_TIME - 1 ? hours : parseInt(moment(startWorkDay, "MMMM DD YYYY, HH:mm").set("hour", 00));
   console.log("hoursFromToday", hoursFromToday);
 
   const todayWorkHoursStart = hoursFromToday > START_WORK_TIME ? hoursFromToday : START_WORK_TIME;
@@ -198,26 +208,9 @@ const handleCalcBtnClick = (e) => {
   const endWorkDay = moment(editingDate, "MMMM DD YYYY").format("dddd");
   console.log("endWorkDay", endWorkDay);
 
-  if (endWorkDay === SARTUDAY) {
-    editingDate = moment(editingDate, "MMMM DD YYYY, HH:mm")
-      .add({
-        days: 2,
-      })
-      .set("hour", endWorkHours)
-      .format("MMMM DD YYYY o HH:mm");
-  }
+  const endDate = includeDayOff(editingDate, endWorkDay);
 
-  if (endWorkDay === SUNDAY) {
-    editingDate = moment(editingDate, "MMMM DD YYYY, HH:mm")
-      .add({
-        days: 1,
-      })
-      .set("hour", endWorkHours)
-      .format("MMMM DD YYYY o HH:mm");
-  }
-
-  console.log("date", editingDate);
-  deadlineDateElem.textContent = editingDate;
+  deadlineDateElem.textContent = endDate;
 };
 
 calculteBtnElem.addEventListener("click", handleCalcBtnClick);
