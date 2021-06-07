@@ -28,7 +28,7 @@ const END_WORK_TIME = 19;
 
 const EXTRA = 1.2;
 
-//--------price----
+//--------file info----
 const handleInputFile = () => {
   const file = fileElem.files[0];
 
@@ -82,7 +82,7 @@ const getAmountOfSymbols = () => {
   return commonLenght;
 };
 
-//------date-------
+//------hours-------
 const getWorksHours = (lang, type) => {
   const editingItemsPerHour = lang === "en" ? EDITING_ITEMS_PER_HOUR_ENG : EDITING_ITEMS_PER_HOUR;
   const commonLenght = getAmountOfSymbols();
@@ -90,14 +90,14 @@ const getWorksHours = (lang, type) => {
   console.log(workHours);
   return workHours < MIN_EDIT_HOUR ? MIN_EDIT_HOUR : workHours;
 };
-//---------
+//-------item price----
 
 const getPriceForItem = (length, isFileType, pricePerItem, minPrice) => {
   const price = !isFileType ? pricePerItem * length * EXTRA : pricePerItem * length;
   return price > minPrice ? price : minPrice;
 };
 
-//--------
+//--------if day-off go to monday------
 const includeDayOff = (edgeWorkDay, givenDay) => {
   if (givenDay === SARTUDAY) {
     edgeWorkDay = moment(edgeWorkDay, "MMMM DD YYYY, HH:mm")
@@ -132,13 +132,10 @@ const handleCalcBtnClick = (e) => {
 
   const fileType = handleInputFile() !== undefined ? NORMAL_PRICE_FILE_FORMATS.filter((type) => type === handleInputFile().fileExtantion).length : 0;
   console.log(fileType);
-  // const fileTypeDate = handleInputFile() !== undefined ? NORMAL_PRICE_FILE_FORMATS.filter((type) => type === handleInputFile().textLength).length : 0;
 
   const price = getPriceForItem(commonLenght, fileType, pricePerItem, minPrice);
-  // const priceDate = getPriceForItem(commonLenght, fileType, pricePerItem, minPrice);
 
   priceElem.textContent = parseInt(Math.ceil(price));
-  // priceElem.textContent = parseInt(Math.ceil(fileTypeDate));
 
   const todayDay = moment().format("dddd");
   console.log("todayDay", todayDay);
@@ -165,9 +162,7 @@ const handleCalcBtnClick = (e) => {
   console.log("todayMaxWorkHours", todayMaxWorkHours);
 
   if (todayMaxWorkHours > maxWorkHours) {
-    //} workHours) {
     const endHour = Math.ceil(todayWorkHoursStart + workHours);
-    //} || (todayMaxWorkHours >= workHours * EXTRA && fileType)) {
     const endWorkTime = moment().set("hour", endHour).format("MMMM DD YYYY o HH:mm");
     console.log("short endWorkTime", endWorkTime);
 
